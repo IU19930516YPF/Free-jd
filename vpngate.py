@@ -24,8 +24,7 @@ from datetime import datetime, timezone, timedelta
 
 VPNGATE_API = "http://www.vpngate.net/api/iphone/"
 
-WORKER_CHECK_URL = os.environ.get(
-    "CHECK_WORKER", "https://你的Worker域名/check")
+WORKER_CHECK_URL = os.environ.get("CHECK_WORKER") or "https://你的Worker域名/check"
 CHECK_CONCURRENCY = int(os.environ.get("CHECK_CONCURRENCY", "32"))
 
 EDGE_HOSTS = [h.strip() for h in os.environ.get(
@@ -78,7 +77,7 @@ def parse_nodes(text):
 
 def check_one(node):
     """经由 Worker 检测单个节点 443 连通性,返回延迟 ms / None."""
-    if "你的Worker域名" in WORKER_CHECK_URL:
+    if not WORKER_CHECK_URL or "你的Worker域名" in WORKER_CHECK_URL:
         return None  # 未配置 Worker,跳过实测
     q = urllib.parse.urlencode({"host": node["ip"], "port": "443"})
     req = urllib.request.Request(f"{WORKER_CHECK_URL}?{q}", headers={
