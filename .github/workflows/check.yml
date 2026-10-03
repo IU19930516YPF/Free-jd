@@ -35,7 +35,7 @@ jobs:
           EDGE_HOSTS: ${{ vars.EDGE_HOSTS }}
           EDT_UUID: ${{ vars.EDT_UUID }}
           EDT_DOMAIN: ${{ vars.EDT_DOMAIN }}
-
+      VPS_VLESS_LINK: ${{ secrets.VPS_VLESS_LINK }}
       - name: Ensure GitHub Pages is enabled (one-time auto setup)
         run: |
           code=$(curl -s -o /dev/null -w '%{http_code}' \
