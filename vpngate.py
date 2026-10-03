@@ -76,22 +76,15 @@ def parse_nodes(text):
 
 
 def check_one(node):
-    """经由 Worker 检测单个节点 443 连通性,返回延迟 ms / None."""
-    if not WORKER_CHECK_URL or "你的Worker域名" in WORKER_CHECK_URL:
-        return None  # 未配置 Worker,跳过实测
-    q = urllib.parse.urlencode({"host": node["ip"], "port": "443"})
-    req = urllib.request.Request(f"{WORKER_CHECK_URL}?{q}", headers={
-        "User-Agent": "vpngate-check/1.0"})
+    """直接 TCP 连接检测 443 端口,返回延迟 ms / None。"""
+    import socket
     t0 = time.time()
     try:
-        with urllib.request.urlopen(req, timeout=25) as r:
-            import json
-            data = json.loads(r.read().decode())
-            if data.get("ok"):
-                return data.get("ms", int((time.time() - t0) * 1000))
+        s = socket.create_connection((node["ip"], 443), timeout=8)
+        s.close()
+        return int((time.time() - t0) * 1000)
     except Exception:
-        pass
-    return None
+        return None
 
 
 def build_vless_sub():
