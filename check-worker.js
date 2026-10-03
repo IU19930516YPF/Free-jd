@@ -1,8 +1,6 @@
 // Cloudflare Worker: SSTP 节点连通性检测端
-// 部署后记下域名,填到 vpngate.py 的 WORKER_CHECK_URL
+// 部署后记下域名,填到 GitHub 仓库 Variables 的 CHECK_WORKER
 // 用法: https://你的域名/check?host=1.2.3.4&port=443
-import { connect } from 'cloudflare:sockets';
-
 export default {
   async fetch(request) {
     const url = new URL(request.url);
@@ -15,8 +13,9 @@ export default {
       return Response.json({ ok: false, error: 'missing host' }, { status: 400 });
     }
     const t0 = Date.now();
-    // 优先 TCP 直连测速 (需要 Workers 付费计划的 sockets 权限,免费版会抛错走 fallback)
+    // 优先 TCP 直连测速 (动态导入:免费版不支持 sockets 时抛错走 fallback,不拖垮整个 Worker)
     try {
+      const { connect } = await import('cloudflare:sockets');
       const sock = connect({ hostname: host, port });
       await sock.opened;
       sock.close();
