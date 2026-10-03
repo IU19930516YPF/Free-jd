@@ -88,21 +88,27 @@ def check_one(node):
 
 
 def build_vless_sub():
-    if not (EDT_UUID and EDT_DOMAIN):
-        return ""
     links = []
-    hosts = EDGE_HOSTS or [f"{EDT_DOMAIN}:443"]
-    for i, h in enumerate(hosts):
-        addr, _, port = h.partition(":")
-        port = port or "443"
-        params = urllib.parse.urlencode({
-            "encryption": "none", "security": "tls", "sni": EDT_DOMAIN,
-            "fp": EDT_FINGERPRINT, "type": "ws", "host": EDT_DOMAIN,
-            "path": "/?ed=2048",
-        })
-        name = urllib.parse.quote(f"edgetunnel-{i+1}")
-        links.append(
-            f"vless://{EDT_UUID}@{addr}:{port}?{params}#{name}")
+    # VPS 私有节点 (经由 GitHub Secret VPS_VLESS_LINK 注入)
+    vps_link = os.environ.get("VPS_VLESS_LINK", "").strip()
+    if vps_link:
+        links.append(vps_link)
+    # edgetunnel (如果配置了 Variables)
+    if EDT_UUID and EDT_DOMAIN:
+        hosts = EDGE_HOSTS or [f"{EDT_DOMAIN}:443"]
+        for i, h in enumerate(hosts):
+            addr, _, port = h.partition(":")
+            port = port or "443"
+            params = urllib.parse.urlencode({
+                "encryption": "none", "security": "tls", "sni": EDT_DOMAIN,
+                "fp": EDT_FINGERPRINT, "type": "ws", "host": EDT_DOMAIN,
+                "path": "/?ed=2048",
+            })
+            name = urllib.parse.quote(f"edgetunnel-{i+1}")
+            links.append(
+                f"vless://{EDT_UUID}@{addr}:{port}?{params}#{name}")
+    if not links:
+        return ""
     raw = "\n".join(links)
     return base64.b64encode(raw.encode()).decode()
 
